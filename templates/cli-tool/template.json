@@ -7,9 +7,9 @@
   "phase": 3,
   "icon": "🖥️",
   "source": {
-    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "repo_url": "https://github.com/MarcusYuan/HiveLaunch",
     "template_path": "templates/cli-tool",
-    "default_ref": "master"
+    "default_ref": "main"
   },
   "variables": [
     {

@@ -7,9 +7,9 @@
   "phase": 2,
   "icon": "📝",
   "source": {
-    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "repo_url": "https://github.com/MarcusYuan/HiveLaunch",
     "template_path": "templates/blog-content",
-    "default_ref": "master"
+    "default_ref": "main"
   },
   "variables": [
     { "key": "PROJECT_NAME", "label": "项目名称", "type": "string" },
