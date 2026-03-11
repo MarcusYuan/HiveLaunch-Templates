@@ -1,0 +1,42 @@
+{
+  "schema_version": "2.0",
+  "id": "rest-api",
+  "name": "REST API",
+  "description": "Hono + Drizzle + Zod + PostgreSQL",
+  "category": "api",
+  "phase": 2,
+  "icon": "⚡",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "template_path": "templates/rest-api",
+    "default_ref": "master"
+  },
+  "variables": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "项目名称",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "placeholder": "my-api",
+      "description": "项目名称"
+    }
+  ],
+  "files": [
+    { "template": "package.json.tmpl", "output": "package.json" }
+  ],
+  "runtimes": [
+    { "id": "opencode", "name": "OpenCode", "config_refs": [".opencode/oh-my-opencode.jsonc", "opencode.json"] }
+  ],
+  "agent_packs": [
+    { "id": "default-pack", "name": "Default Agent Pack", "compatible_runtimes": ["opencode"], "artifact_refs": ["AGENTS.md", "CLAUDE.md", ".opencode/skills/"] }
+  ],
+  "skills": [
+    "typescript-expert",
+    "drizzle-orm"
+  ],
+  "defaults": {
+    "runtime_id": "opencode",
+    "agent_pack_id": "default-pack"
+  },
+  "post_clone_script": ["pnpm install", "cp .env.example .env"]
+}

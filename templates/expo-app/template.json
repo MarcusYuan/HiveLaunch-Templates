@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "id": "expo-app",
+  "name": "Expo 移动 APP",
+  "description": "React Native + Expo SDK 54 + NativeWind + Zustand",
+  "category": "mobile",
+  "phase": 1,
+  "icon": "📱",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "template_path": "templates/expo-app",
+    "default_ref": "master"
+  },
+  "variables": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "项目名称",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "placeholder": "my-awesome-app",
+      "description": "项目名称，仅小写字母、数字和连字符"
+    },
+    {
+      "key": "DISPLAY_NAME",
+      "label": "显示名称",
+      "type": "string",
+      "placeholder": "My Awesome App",
+      "description": "应用在设备上显示的名称"
+    },
+    {
+      "key": "BUNDLE_ID",
+      "label": "Bundle ID",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.]*$",
+      "placeholder": "com.company.myapp",
+      "default": "com.hivelaunch.{{PROJECT_NAME}}",
+      "description": "iOS/Android 包标识符"
+    }
+  ],
+  "files": [
+    {
+      "template": "package.json.tmpl",
+      "output": "package.json"
+    },
+    {
+      "template": "app.json.tmpl",
+      "output": "app.json"
+    }
+  ],
+  "runtimes": [
+    { "id": "opencode", "name": "OpenCode", "config_refs": [".opencode/oh-my-opencode.jsonc", "opencode.json"] }
+  ],
+  "agent_packs": [
+    { "id": "default-pack", "name": "Default Agent Pack", "compatible_runtimes": ["opencode"], "artifact_refs": ["AGENTS.md", "CLAUDE.md", ".opencode/skills/"] }
+  ],
+  "skills": [
+    "react-native-expo",
+    "reanimated-skia-performance",
+    "zustand-state-management"
+  ],
+  "defaults": {
+    "runtime_id": "opencode",
+    "agent_pack_id": "default-pack"
+  },
+  "recommended_swarms": [
+    { "id": "react-native-swarm" }
+  ],
+  "post_clone_script": [
+    "pnpm install"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "id": "saas-dashboard",
+  "name": "SaaS Dashboard",
+  "description": "Next.js 15 + shadcn/ui + Better Auth + Drizzle",
+  "category": "web",
+  "phase": 1,
+  "icon": "🌐",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "template_path": "templates/saas-dashboard",
+    "default_ref": "master"
+  },
+  "variables": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "项目名称",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "placeholder": "my-saas-dashboard",
+      "description": "项目名称，仅小写字母、数字和连字符"
+    },
+    {
+      "key": "DISPLAY_NAME",
+      "label": "显示名称",
+      "type": "string",
+      "placeholder": "My SaaS Dashboard",
+      "description": "应用显示的名称"
+    },
+    {
+      "key": "DATABASE_URL",
+      "label": "数据库连接",
+      "type": "string",
+      "placeholder": "postgres://user:pass@localhost:5432/db",
+      "description": "PostgreSQL 连接字符串"
+    }
+  ],
+  "files": [
+    {
+      "template": "package.json.tmpl",
+      "output": "package.json"
+    }
+  ],
+  "runtimes": [
+    { "id": "opencode", "name": "OpenCode", "config_refs": [".opencode/oh-my-opencode.jsonc", "opencode.json"] }
+  ],
+  "agent_packs": [
+    { "id": "default-pack", "name": "Default Agent Pack", "compatible_runtimes": ["opencode"], "artifact_refs": ["AGENTS.md", "CLAUDE.md", ".opencode/skills/"] }
+  ],
+  "skills": [
+    "vercel-react-best-practices",
+    "tailwind-v4-shadcn",
+    "drizzle-orm",
+    "zustand-state-management",
+    "tanstack-query-best-practices"
+  ],
+  "defaults": {
+    "runtime_id": "opencode",
+    "agent_pack_id": "default-pack"
+  },
+  "recommended_swarms": [
+    { "id": "saas-swarm" }
+  ],
+  "post_clone_script": [
+    "pnpm install",
+    "pnpm db:generate"
+  ]
+}

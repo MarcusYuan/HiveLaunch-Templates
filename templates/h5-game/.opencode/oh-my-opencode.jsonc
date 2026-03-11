@@ -1,0 +1,552 @@
+{
+  // ========================================================================
+  // oh-my-opencode 配置文件
+  // ========================================================================
+  // 本文件采用 JSONC 格式（支持 // 注释），可以随意添加注释说明
+  //
+  // ┌────────────────────────────────────────────────────────────────────────┐
+  // │                          核心概念说明                                   │
+  // └────────────────────────────────────────────────────────────────────────┘
+  //
+  // 【Agent（代理）】
+  //   定义：执行任务的智能体，分为三类：
+  //   - 主代理 (Primary): sisyphus, hephaestus, atlas - 用户直接交互
+  //   - 子代理 (Subagent): explore, librarian, oracle, metis, momus,
+  //                        multimodal-looker, prometheus - 被委派调用
+  //   - 系统代理: build, plan, sisyphus-junior, OpenCode-Builder - 内部使用
+  //
+  //   配置位置：agents 字段
+  //   支持参数：model, temperature, skills, prompt_append, permission 等
+  //
+  // 【Skill（技能）】
+  //   定义：可注入到代理的专业知识模块，以 Markdown 文件形式存在
+  //   存放位置：
+  //   - 全局: ~/.config/opencode/skills/
+  //   - 项目: .opencode/skills/
+  //
+  //   注入方式：
+  //   1. 静态注入 - 绑定到代理的 skills 字段，每次启动自动加载
+  //      适用于：通用基础技能（如 supabase、git-master）
+  //   2. 动态注入 - 通过 task(load_skills: [...]) 按需加载
+  //      适用于：领域特定技能（如 react、tailwind、playwright）
+  //
+  //   注意：Skills 不会自动全局注入，必须显式配置！
+  //
+  // 【Category（类别）】
+  //   定义：按任务领域预设的配置组合（模型、温度、提示词等）
+  //   用途：通过 task(category="xxx") 快速应用预设配置
+  //   内置类别：visual-engineering, ultrabrain, deep, artistry, quick,
+  //            unspecified-low, unspecified-high, writing
+  //
+  //   配置位置：categories 字段
+  //   支持参数：model, temperature, prompt_append, thinking 等
+  //   限制：Category 不支持 skills 字段！需通过 task(load_skills) 加载
+  //
+  // 【Task（任务委派）】
+  //   定义：Sisyphus 将工作委派给子代理的核心工具
+  //   参数说明：
+  //   - description: 任务简短描述（3-5词）
+  //   - prompt: 详细任务提示词
+  //   - category: 任务类别 → 决定使用的模型和配置
+  //   - subagent_type: 指定子代理（explore/librarian/oracle）
+  //   - load_skills: 动态加载的技能列表
+  //   - run_in_background: 是否后台异步执行
+  //
+  //   使用示例：
+  //   task(
+  //     category: "visual-engineering",
+  //     load_skills: ["react", "tailwind"],
+  //     prompt: "实现用户列表组件"
+  //   )
+  //
+  // ┌────────────────────────────────────────────────────────────────────────┐
+  // │                        Skills 分层策略建议                              │
+  // └────────────────────────────────────────────────────────────────────────┘
+  //
+  // 第一层：通用基础 → 静态绑定到 Sisyphus
+  //   适用于几乎每个项目都用的技术栈
+  //   配置：agents.sisyphus.skills: ["supabase-mcp-mode", ...]
+  //
+  // 第二层：领域特定 → 通过 task(load_skills) 动态加载
+  //   适用于前端、测试、DevOps 等按项目类型按需使用
+  //   示例：task(load_skills: ["react", "playwright"])
+  //
+  // 第三层：用户命令触发 → 创建 /xxx Skill
+  //   适用于用户主动调用的工作流
+  //   示例：/frontend、/learn、/supabase
+  //
+  // ┌────────────────────────────────────────────────────────────────────────┐
+  // │                           MCP 配置说明                                  │
+  // └────────────────────────────────────────────────────────────────────────┘
+  //
+  // MCP 服务器配置不在本文件中，而是放在专门的 MCP 配置文件：
+  //   - 全局: ~/.config/opencode/mcp.json
+  //   - 项目: .opencode/mcp.json
+  //   - Skill 内嵌: 在 SKILL.md 的 frontmatter 中定义 mcp 字段
+  //
+  // 本文件只能控制 MCP 的禁用：disabled_mcps: ["xxx"]
+  //
+  // ========================================================================
+
+  // 指向 JSON Schema 定义，用于 IDE 自动补全和验证
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+
+  // ========================================================================
+  // 基础配置
+  // ========================================================================
+  // 默认使用的主代理 (可选: sisyphus, hephaestus, atlas)
+  // - sisyphus: 谨慎的指挥官，多问少错，适合团队协作
+  // - hephaestus: 自主的工匠，探索优先，适合独立工作
+  "default_run_agent": "sisyphus",
+
+  // ========================================================================
+  // AGENTS (智能体配置)
+  // ========================================================================
+  // 代理是执行任务的智能体，分为主代理和子代理
+  // 主代理: sisyphus, hephaestus, atlas (用户直接交互)
+  // 子代理: explore, librarian, oracle, metis, momus, multimodal-looker, prometheus (被委派调用)
+  // 特殊代理: build, plan, sisyphus-junior, OpenCode-Builder (系统内部使用)
+  //
+  // 代理配置选项详细说明:
+  // - model: 使用的模型 (格式: "provider/model-id", 如 "anthropic/claude-opus-4-6")
+  // - variant: 模型变体 (可选: "max", "high", "medium", "low", "xhigh")
+  // - category: 继承某个类别的配置 (可选: "visual-engineering", "ultrabrain" 等)
+  // - skills: 默认加载的技能列表 (可选: ["git-master", "playwright"] 等)
+  // - temperature: 温度参数 (可选, 0-2, 默认 0.5)
+  // - top_p: 核采样参数 (可选, 0-1)
+  // - prompt: 完全替换系统提示词 (谨慎使用)
+  // - prompt_append: 追加到系统提示词末尾
+  // - tools: 工具开关 {"工具名": true/false}
+  // - disable: 是否禁用此代理
+  // - description: 代理描述 (用于任务选择参考)
+  // - mode: 代理模式 ("subagent", "primary", "all")
+  // - color: 代理颜色 (十六进制, 如 "#FF5733")
+  // - permission: 权限控制 (edit, bash, webfetch, task 等)
+  // - maxTokens: 最大响应令牌数
+  // - thinking: 扩展思考配置 (Anthropic模型专用)
+  // - reasoningEffort: 推理努力程度 (OpenAI模型专用: low, medium, high, xhigh)
+  // - textVerbosity: 文本详细程度 (low, medium, high)
+  //
+  // 定义各个智能体使用的模型、温度参数、权限等
+  "agents": {
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Sisyphus - 主编排智能体                                          │
+    // │ 职责：任务分发、多智能体协调、工作流控制                          │
+    // └─────────────────────────────────────────────────────────────────┘
+    "sisyphus": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5", // 使用的模型 ID (格式: provider/model)
+      "temperature": 0.7, // 温度参数 (0-1)，越高越有创造性
+      "thinking": {
+        // 推理模式配置（Claude 扩展思考）
+        "type": "enabled", // 启用推理模式
+        "budgetTokens": 200000 // 推理token预算上限
+      },
+      "skills": [
+        // ==前端核心==
+        "vercel-react-best-practices",
+        "tailwind-v4-shadcn",
+        "tanstack-query-best-practices",
+        "zustand-state-management",
+        "typescript-expert",
+        "emilkowal-animations",
+        "ui-ux-pro-max",  
+         // === 桌面端核心 ===
+        "rust-desktop-applications",
+        // === 数据库 ===
+        "drizzle-orm",
+        // === 开发工具 ===
+        "using-git-worktrees"
+      ],
+      // 任务委派时的 Skills 加载规则
+      "prompt_append": "## 任务委派 Skills 加载规则\n\n委派任务时，根据任务类型使用 task(load_skills: [...]) 加载对应技能：\n\n| 任务类型 | load_skills | 说明 |\n|---------|-------------|------|\n| React/Next.js | [\"vercel-react-best-practices\"] | React 19 + Next.js 15 最佳实践 |\n| UI/样式 | [\"tailwind-v4-shadcn\"] | Tailwind v4 + shadcn/ui 组件 |\n| UI/UX 设计 | [\"ui-ux-pro-max\"] | 设计系统、配色、字体、UX 最佳实践 |\n| 状态管理 | [\"zustand-state-management\"] | Zustand store 设计 |\n| 数据获取 | [\"tanstack-query-best-practices\"] | React Query 缓存策略 |\n| 动画实现 | [\"emilkowal-animations\"] | Framer Motion 动画效果 |\n| 类型系统 | [\"typescript-expert\"] | TypeScript 高级类型 |\n| Rust/Tauri | [\"rust-desktop-applications\"] | Tauri 桌面应用开发 |\n| 数据库 ORM | [\"drizzle-orm\"] | Drizzle ORM 查询与迁移 |\n| Git Worktree | [\"using-git-worktrees\"] | Git worktree 管理 |\n\n示例：\n```\ntask(\n  category: \"visual-engineering\",\n  load_skills: [\"tailwind-v4-shadcn\", \"emilkowal-animations\"],\n  prompt: \"实现卡片翻转动画\"\n)\n```",
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Prometheus - 规划智能体 (Planning Triad 之一)                    │
+    // │ 职责：任务规划、需求分析、步骤拆解                                │
+    // └─────────────────────────────────────────────────────────────────┘
+    "prometheus": {
+      "model": "zai-coding-plan/glm-5"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Metis - 审查智能体 (Planning Triad 之一)                         │
+    // │ 职责：计划审查、风险评估、质量检查                                │
+    // └─────────────────────────────────────────────────────────────────┘
+    "metis": {
+      "model": "opencode/kimi-k2.5-free"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Momus - 评审智能体 (Planning Triad 之一)                         │
+    // │ 职责：结果评审、反馈收集、改进建议                                │
+    // └─────────────────────────────────────────────────────────────────┘
+    "momus": {
+      "model": "opencode/kimi-k2.5-free"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Oracle - 架构与调试智能体                                         │
+    // │ 职责：代码架构分析、复杂问题诊断、技术方案设计                    │
+    // └─────────────────────────────────────────────────────────────────┘
+    "oracle": {
+      "model": "zai-coding-plan/glm-5",
+      "permission": {
+        // 权限控制（限制某些工具的使用）
+        "edit": "deny", // 禁止编辑文件
+        "bash": "deny" // 禁止执行命令
+      }
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Librarian - 文档检索智能体                                       │
+    // │ 职责：代码搜索、文档查询、外部研究                                │
+    // └─────────────────────────────────────────────────────────────────┘
+    "librarian": {
+      "category": "research"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Explore - 代码库探索智能体                                       │
+    // │ 职责：快速浏览代码库、查找文件、理解结构                          │
+    // └─────────────────────────────────────────────────────────────────┘
+    "explore": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5" // 使用 glm-4.7 快速探索
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Multimodal-Looker - 多媒体智能体                                 │
+    // │ 职责：处理图像、视频等多媒体内容                                  │
+    // └─────────────────────────────────────────────────────────────────┘
+    "multimodal-looker": {
+      "model": "opencode/kimi-k2.5-free" // Gemini 擅长视觉理解
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Hephaestus - 重构智能体                                          │
+    // │ 职责：代码重构、LSP 集成、AST 操作                                │
+    // └─────────────────────────────────────────────────────────────────┘
+    "hephaestus": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Atlas - Hook 智能体                                              │
+    // │ 职责：7阶段工作流编排、上下文累积、会话恢复                        │
+    // └─────────────────────────────────────────────────────────────────┘
+    "atlas": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // =========================================
+    // 系统内部代理
+    // =========================================
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Sisyphus-Junior - 任务委派子代理                                 │
+    // │ 职责：通过 task(category="xxx") 创建的临时代理                    │
+    // └─────────────────────────────────────────────────────────────────┘
+    "sisyphus-junior": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Build - OpenCode 默认构建代理                                    │
+    // │ 职责：OpenCode SDK 的默认代理                                    │
+    // └─────────────────────────────────────────────────────────────────┘
+    "build": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Plan - OpenCode 默认计划代理                                     │
+    // │ 职责：OpenCode SDK 的默认计划代理                                 │
+    // └─────────────────────────────────────────────────────────────────┘
+    "plan": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ OpenCode-Builder - 重命名的 OpenCode 构建代理                    │
+    // │ 职责：由于 SDK 限制重命名的构建代理                               │
+    // └─────────────────────────────────────────────────────────────────┘
+    "OpenCode-Builder": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    }
+  },
+
+  // ========================================================================
+  // CATEGORIES (任务分类与模型映射)
+  // ========================================================================
+  // 类别是按任务领域预设的配置组合，通过 task(category="xxx", ...) 使用
+  //
+  // 类别配置选项说明:
+  // - description: 类别描述 (用于帮助智能体选择合适的类别)
+  // - model: 使用的模型 (格式: "provider/model-id")
+  // - variant: 模型变体 (可选: "max", "high", "medium", "low", "xhigh")
+  // - temperature: 温度参数 (可选, 0-2)
+  // - top_p: 核采样参数 (可选, 0-1)
+  // - prompt_append: 追加到提示词末尾的指令
+  // - thinking: 扩展思考配置 (Anthropic模型)
+  // - reasoningEffort: 推理努力程度 (OpenAI模型)
+  // - textVerbosity: 文本详细程度
+  // - tools: 工具开关 {"工具名": true/false}
+  // - is_unstable_agent: 是否标记为不稳定 (强制后台运行监控)
+  //
+  // 根据任务类型自动选择最合适的模型和参数
+  "categories": {
+    // 视觉工程类任务（UI/UX 实现）
+    "visual-engineering": {
+      "model": "opencode/kimi-k2.5-free", // 使用强大的 Gemini Pro
+      "prompt_append": "专注于 UI/UX 实现，优先使用 Tailwind CSS" // 追加到提示词后的指令
+    },
+
+    // 超强大脑模式（复杂推理任务）
+    "ultrabrain": {
+      "model": "zai-coding-plan/glm-5", // Claude Opus 推理版
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 300000 // 更大的推理预算
+      }
+    },
+
+    // 深度思考模式（需要仔细分析的任务）
+    "deep": {
+      "model": "zai-coding-plan/glm-5"
+    },
+
+    // 创意/艺术类任务（需要更多创造性）
+    "artistry": {
+      "model": "opencode/kimi-k2.5-free",
+      "temperature": 1.0 // 最高温度，最大化创造性
+    },
+
+    // 快速响应模式（简单任务）
+    "quick": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // 未指定优先级-低（默认使用经济模型）
+    "unspecified-low": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5"
+    },
+
+    // 未指定优先级-高（默认使用强大模型）
+    "unspecified-high": {
+      "model": "zai-coding-plan/glm-5"
+    },
+
+    // 写作类任务
+    "writing": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5",
+      "temperature": 0.8 // 较高温度，适合创意写作
+    },
+
+    // ┌─────────────────────────────────────────────────────────────────┐
+    // │ Research - 文档研究与外部信息检索                                │
+    // │ 用途：task(category: "research", ...) 用于外部文档/资讯查询      │
+    // └─────────────────────────────────────────────────────────────────┘
+    "research": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.5",
+      "description": "文档研究与外部信息检索，优先使用 MCP 工具",
+      "prompt_append": "## 研究任务专用指令\n\n你是研究员/文献管理员，专注于**外部信息检索**。\n\n### 与 Explore 的分工\n- **你 (Research/Librarian)**: 外部资源 - 官方文档、GitHub 仓库、开源示例、网页教程\n- **Explore**: 内部资源 - 本地代码库、项目文件结构\n\n### MCP 工具选择矩阵\n\n| 场景 | 工具 | 调用方式 |\n|------|------|----------|\n| 查 npm/编程库文档 | context7 | 先 resolve-library-id → 再 query-docs |\n| 查 GitHub 仓库架构 | deepwiki | ask_question(repoName, question) |\n| 查最新教程/博客 | exa | web_search_exa 或 get_code_context_exa |\n\n### 常用 Library ID (context7)\n- Expo: `/expo/expo`\n- Supabase: `/supabase/supabase`\n- TanStack Query: `/tanstack/query`\n- Zustand: `/pmndrs/zustand`\n- Reanimated: `/software-mansion/react-native-reanimated`\n- NativeWind: `/nativewind/nativewind`\n- FlashList: `/shopify/flash-list`\n\n### 工作流程\n1. 查询库文档 → 使用 `context7` 先 resolve-library-id，再 query-docs\n2. 查询 GitHub 项目 → 使用 `deepwiki` 的 ask_question\n3. 查询最新资讯 → 使用 `exa` 的 web_search_exa\n\n### 输出规范\n- 标注来源 URL\n- 标注版本号（如适用）\n- 提取关键 API 示例代码"
+    }
+  },
+
+  // ========================================================================
+  // BACKGROUND TASK (后台任务并发控制)
+  // ========================================================================
+  // 控制后台智能体的并发数量，防止资源耗尽或 API 限流
+  //
+  // 配置选项说明:
+  // - defaultConcurrency: 默认最大并发数 (默认: 5)
+  // - staleTimeoutMs: 任务无活动超时时间 (毫秒, 最小 60000 = 1分钟)
+  // - providerConcurrency: 按提供商限制 {"provider": max_count}
+  // - modelConcurrency: 按具体模型限制 {"model_id": max_count} (优先级最高)
+  //
+  // 优先级: modelConcurrency > providerConcurrency > defaultConcurrency
+  "background_task": {
+    "defaultConcurrency": 10, // 默认最大并发后台任务数
+
+    "staleTimeoutMs": 180000, // 任务超时时间（毫秒），3分钟 = 180000ms
+
+    // 按 Provider 限制并发（不同服务商的限流策略不同）
+    "providerConcurrency": {
+      "default": 5, // Anthropic (Claude) 最多 2 个并发
+      "zai-coding-plan": 5,
+      "opencode": 5 // OpenCode 自带模型最多 10 个并发
+    },
+
+    // 按具体模型限制并发
+    "modelConcurrency": {
+      "opencode/kimi-k2.5-free": 1
+    }
+  },
+
+  // ========================================================================
+  // SISYPHUS AGENT (主智能体特定配置)
+  // ========================================================================
+  "sisyphus_agent": {
+    "disabled": false, // 是否禁用 Sisyphus 主智能体
+    "default_builder_enabled": true, // 是否启用默认构建器
+    "planner_enabled": true, // 是否启用 Prometheus 规划器
+    "replace_plan": false // 是否替换现有计划（true = 覆盖，false = 追加）
+  },
+
+  // ========================================================================
+  // GIT MASTER (Git 操作配置)
+  // ========================================================================
+  "git_master": {
+    "commit_footer": true, // 在 commit 信息末尾添加脚注
+    "include_co_authored_by": true // 包含 Co-Authored-By 信息（多人协作时）
+  },
+
+  // ========================================================================
+  // COMMENT CHECKER (注释检查配置)
+  // ========================================================================
+  "comment_checker": {
+    "custom_prompt": "只保留解释 WHY 的注释，删除解释 WHAT 的注释"
+    // 自定义注释审查规则
+    // WHY: 为什么这样做（保留）
+    // WHAT: 做了什么（删除，因为代码本身就很清楚）
+  },
+
+  // ========================================================================
+  // EXPERIMENTAL (实验性功能)
+  // ========================================================================
+  "experimental": {
+    "aggressive_truncation": false, // 激进截断模式：强制缩短上下文
+
+    "auto_resume": true, // 自动恢复：中断后自动继续任务
+
+    // 动态上下文修剪：自动清理冗余的上下文以节省 token
+    "dynamic_context_pruning": {
+      "enabled": true, // 启用动态上下文修剪
+
+      "notification": "minimal", // 修剪通知级别: "minimal" | "normal" | "verbose"
+
+      // 轮次保护：最近 N 轮对话的内容不被修剪
+      "turn_protection": {
+        "enabled": true,
+        "turns": 3 // 保护最近 3 轮对话
+      },
+
+      // 受保护的工具：这些工具的输出不会被修剪
+      "protected_tools": [
+        "task", // 任务工具
+        "todowrite", // Todo 写入
+        "todoread", // Todo 读取
+        "lsp_rename", // LSP 重命名
+        "session_read", // 会话读取
+        "session_write" // 会话写入
+      ],
+
+      // 修剪策略
+      "strategies": {
+        "deduplication": {
+          // 去重策略：删除重复内容
+          "enabled": true
+        },
+        "supersede_writes": {
+          // 写入覆盖策略：旧写入被新写入覆盖
+          "enabled": true
+        },
+        "purge_errors": {
+          // 错误清理策略：清理 N 轮前的错误信息
+          "enabled": true,
+          "turns": 5 // 清理 5 轮前的错误
+        }
+      }
+    }
+  },
+
+  // ========================================================================
+  // AUTO UPDATE (自动更新)
+  // ========================================================================
+  "auto_update": true, // 自动检查并更新 oh-my-opencode 插件
+
+  // ========================================================================
+  // SKILLS (启用的技能列表)
+  // ========================================================================
+  // 技能是预定义的工作流或专业能力，可以被智能体调用
+  "skills": [
+    // "frontend-ui-ux",
+    "idea-stitch" // 项目转换成 UI 设计图
+  ],
+
+  // ========================================================================
+  // DISABLED (禁用的组件)
+  // ========================================================================
+  "disabled_hooks": [], // 禁用的钩子列表（按名称）
+  "disabled_agents": [], // 禁用的智能体列表
+  "disabled_skills": [], // 禁用的技能列表
+  "disabled_mcps": [], // 禁用的 MCP 服务器列表
+  "disabled_commands": [], // 禁用的命令列表
+  "disabled_tools": [], // 禁用的工具列表
+
+  // ========================================================================
+  // BROWSER AUTOMATION (浏览器自动化配置)
+  // ========================================================================
+  "browser_automation_engine": {
+    // 浏览器自动化提供商
+    // - "playwright": 默认，使用 Playwright MCP 服务器
+    // - "agent-browser": 使用 Vercel 的 agent-browser CLI
+    // - "dev-browser": 使用 dev-browser 技能
+    "provider": "playwright"
+  },
+
+  // ========================================================================
+  // WEBSEARCH (网页搜索配置)
+  // ========================================================================
+  "websearch": {
+    // 网页搜索提供商
+    // - "exa": 默认，无需 API 密钥
+    // - "tavily": 需要 TAVILY_API_KEY
+    "provider": "exa"
+  },
+
+  // ========================================================================
+  // TMUX (终端复用器集成)
+  // ========================================================================
+  // 在单独的 tmux 面板中运行后台代理，实现可视化多代理执行
+  "tmux": {
+    "enabled": false, // 是否启用 tmux 集成
+    "layout": "main-vertical", // 布局类型
+    "main_pane_size": 60, // 主面板大小百分比
+    "main_pane_min_width": 120, // 主面板最小宽度
+    "agent_pane_min_width": 40 // 代理面板最小宽度
+  },
+
+  // ========================================================================
+  // NOTIFICATION (通知配置)
+  // ========================================================================
+  "notification": {
+    "force_enable": false // 强制启用会话通知
+  },
+
+  // ========================================================================
+  // RALPH LOOP (自动化循环配置)
+  // ========================================================================
+  "ralph_loop": {
+    "enabled": false, // 是否启用拉尔夫循环功能
+    "default_max_iterations": 100, // 默认最大迭代次数
+    "state_dir": ".opencode/" // 状态文件目录
+  },
+
+  // ========================================================================
+  // BABYSITTING (不稳定代理监控)
+  // ========================================================================
+  "babysitting": {
+    "timeout_ms": 120000 // 超时时间（毫秒）
+  },
+
+  // ========================================================================
+  // SISYPHUS TASKS (任务系统配置)
+  // ========================================================================
+  "sisyphus": {
+    "tasks": {
+      "storage_path": ".sisyphus/tasks", // 任务存储路径
+      "claude_code_compat": false // Claude Code 路径兼容模式
+    }
+  }
+}

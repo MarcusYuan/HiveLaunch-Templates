@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "id": "chrome-extension",
+  "name": "Chrome 扩展",
+  "description": "WXT + React + Tailwind CSS - 现代 Chrome 扩展开发",
+  "category": "extension",
+  "phase": 3,
+  "icon": "🔌",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "template_path": "templates/chrome-extension",
+    "default_ref": "master"
+  },
+  "variables": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "项目名称",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "placeholder": "my-chrome-extension",
+      "description": "项目名称，仅小写字母、数字和连字符"
+    },
+    {
+      "key": "DISPLAY_NAME",
+      "label": "显示名称",
+      "type": "string",
+      "placeholder": "My Chrome Extension",
+      "description": "扩展显示的名称"
+    },
+    {
+      "key": "DESCRIPTION",
+      "label": "描述",
+      "type": "string",
+      "placeholder": "A brief description of your extension",
+      "description": "扩展的简短描述"
+    },
+    {
+      "key": "VERSION",
+      "label": "版本号",
+      "type": "string",
+      "default": "0.1.0",
+      "description": "扩展版本"
+    }
+  ],
+  "files": [
+    {
+      "template": "package.json.tmpl",
+      "output": "package.json"
+    }
+  ],
+  "runtimes": [
+    { "id": "opencode", "name": "OpenCode", "config_refs": [".opencode/oh-my-opencode.jsonc", "opencode.json"] }
+  ],
+  "agent_packs": [
+    { "id": "default-pack", "name": "Default Agent Pack", "compatible_runtimes": ["opencode"], "artifact_refs": ["AGENTS.md", "CLAUDE.md", ".opencode/skills/"] }
+  ],
+  "skills": [
+    "typescript-expert",
+    "tailwind-v4-shadcn"
+  ],
+  "defaults": {
+    "runtime_id": "opencode",
+    "agent_pack_id": "default-pack"
+  },
+  "recommended_swarms": [
+    { "id": "chrome-extension-swarm" }
+  ],
+  "post_clone_script": [
+    "pnpm install"
+  ]
+}

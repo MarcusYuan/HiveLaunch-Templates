@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+import { run } from '@oclif/core';
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+
+const __dirname = resolve(fileURLToPath(import.meta.url), '..');
+
+await run(undefined, __dirname);

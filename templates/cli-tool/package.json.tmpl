@@ -1,0 +1,35 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "version": "{{VERSION}}",
+  "description": "{{DESCRIPTION}}",
+  "type": "module",
+  "bin": {
+    "{{BIN_NAME}}": "./bin/run.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "test": "node --experimental-vm-modules node_modules/mocha/bin/mocha.js --require ts-node/esm test/**/*.test.ts",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@oclif/core": "^4.0.0",
+    "@oclif/plugin-help": "^6.0.0",
+    "inquirer": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "eslint": "^9.18.0",
+    "mocha": "^11.0.0"
+  },
+  "oclif": {
+    "bin": "{{BIN_NAME}}",
+    "dirname": "{{BIN_NAME}}",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  }
+}

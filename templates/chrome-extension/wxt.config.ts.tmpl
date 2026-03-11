@@ -1,0 +1,20 @@
+import { defineConfig } from 'wxt';
+
+export default defineConfig({
+  manifest: {
+    name: '{{DISPLAY_NAME}}',
+    description: '{{DESCRIPTION}}',
+    version: '{{VERSION}}',
+    permissions: ['storage'],
+  },
+  app: {
+    popup: {
+      type: 'entry',
+      import: './entrypoints/popup/main.tsx',
+    },
+    options: {
+      type: 'entry',
+      import: './entrypoints/options/main.tsx',
+    },
+  },
+});

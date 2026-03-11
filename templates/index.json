@@ -1,0 +1,59 @@
+{
+  "schema_version": "2.0",
+  "version": "2026-03-10.1",
+  "signature": "",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "default_ref": "main"
+  },
+  "templates": [
+    {
+      "id": "ai-web-app",
+      "manifest_path": "templates/ai-web-app/template.json"
+    },
+    {
+      "id": "blog-content",
+      "manifest_path": "templates/blog-content/template.json"
+    },
+    {
+      "id": "chrome-extension",
+      "manifest_path": "templates/chrome-extension/template.json"
+    },
+    {
+      "id": "cli-tool",
+      "manifest_path": "templates/cli-tool/template.json"
+    },
+    {
+      "id": "ecommerce",
+      "manifest_path": "templates/ecommerce/template.json"
+    },
+    {
+      "id": "expo-app",
+      "manifest_path": "templates/expo-app/template.json"
+    },
+    {
+      "id": "fullstack-monorepo",
+      "manifest_path": "templates/fullstack-monorepo/template.json"
+    },
+    {
+      "id": "h5-game",
+      "manifest_path": "templates/h5-game/template.json"
+    },
+    {
+      "id": "rest-api",
+      "manifest_path": "templates/rest-api/template.json"
+    },
+    {
+      "id": "saas-dashboard",
+      "manifest_path": "templates/saas-dashboard/template.json"
+    },
+    {
+      "id": "taro-mini-program",
+      "manifest_path": "templates/taro-mini-program/template.json"
+    },
+    {
+      "id": "tauri-desktop",
+      "manifest_path": "templates/tauri-desktop/template.json"
+    }
+  ]
+}

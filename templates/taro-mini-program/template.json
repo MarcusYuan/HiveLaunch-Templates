@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "id": "taro-mini-program",
+  "name": "Taro 小程序",
+  "description": "Taro 4 + React + TypeScript + Tailwind CSS",
+  "category": "mini-program",
+  "phase": 1,
+  "icon": "📲",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "template_path": "templates/taro-mini-program",
+    "default_ref": "master"
+  },
+  "variables": [
+    {
+      "key": "PROJECT_NAME",
+      "label": "项目名称",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "placeholder": "my-mini-program",
+      "description": "项目名称，仅小写字母、数字和连字符"
+    },
+    {
+      "key": "DISPLAY_NAME",
+      "label": "显示名称",
+      "type": "string",
+      "placeholder": "我的小程序",
+      "description": "小程序显示名称"
+    },
+    {
+      "key": "APP_ID",
+      "label": "微信 AppID",
+      "type": "string",
+      "placeholder": "wx...",
+      "description": "微信小程序 AppID"
+    }
+  ],
+  "files": [
+    {
+      "template": "package.json.tmpl",
+      "output": "package.json"
+    },
+    {
+      "template": "project.config.json.tmpl",
+      "output": "project.config.json"
+    }
+  ],
+  "runtimes": [
+    { "id": "opencode", "name": "OpenCode", "config_refs": [".opencode/oh-my-opencode.jsonc", "opencode.json"] }
+  ],
+  "agent_packs": [
+    { "id": "default-pack", "name": "Default Agent Pack", "compatible_runtimes": ["opencode"], "artifact_refs": ["AGENTS.md", "CLAUDE.md", ".opencode/skills/"] }
+  ],
+  "skills": [
+    "typescript-expert",
+    "tailwind-v4-shadcn"
+  ],
+  "defaults": {
+    "runtime_id": "opencode",
+    "agent_pack_id": "default-pack"
+  },
+  "recommended_swarms": [
+    { "id": "mini-program-swarm" }
+  ],
+  "post_clone_script": [
+    "pnpm install"
+  ]
+}

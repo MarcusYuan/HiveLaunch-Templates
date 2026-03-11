@@ -1,0 +1,32 @@
+{
+  "schema_version": "2.0",
+  "id": "ecommerce",
+  "name": "电商应用",
+  "description": "Next.js 15 + Stripe + Tailwind",
+  "category": "commerce",
+  "phase": 2,
+  "icon": "🛒",
+  "source": {
+    "repo_url": "https://gitee.com/hivelaunch/hivelaunch.git",
+    "template_path": "templates/ecommerce",
+    "default_ref": "master"
+  },
+  "variables": [{ "key": "PROJECT_NAME", "label": "项目名称", "type": "string" }],
+  "files": [{ "template": "package.json.tmpl", "output": "package.json" }],
+  "runtimes": [
+    { "id": "opencode", "name": "OpenCode", "config_refs": [".opencode/oh-my-opencode.jsonc", "opencode.json"] }
+  ],
+  "agent_packs": [
+    { "id": "default-pack", "name": "Default Agent Pack", "compatible_runtimes": ["opencode"], "artifact_refs": ["AGENTS.md", "CLAUDE.md", ".opencode/skills/"] }
+  ],
+  "skills": [
+    "vercel-react-best-practices",
+    "tailwind-v4-shadcn",
+    "tanstack-query-best-practices"
+  ],
+  "defaults": {
+    "runtime_id": "opencode",
+    "agent_pack_id": "default-pack"
+  },
+  "post_clone_script": ["pnpm install"]
+}
