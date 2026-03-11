@@ -57,7 +57,7 @@ templates/
   "version": "2026-03-10.1",
   "signature": "",
   "source": {
-    "repo_url": "https://github.com/MarcusYuan/HiveLaunch",
+    "repo_url": "https://github.com/MarcusYuan/HiveLaunch-Templates",
     "default_ref": "main"
   },
   "templates": [
@@ -95,11 +95,11 @@ templates/
   "category": "web",
   "phase": 1,
   "source": {
-    "repo_url": "https://github.com/MarcusYuan/HiveLaunch",
+    "repo_url": "https://github.com/MarcusYuan/HiveLaunch-Templates",
     "template_path": "templates/ai-web-app",
     "default_ref": "main",
     "mirrors": [
-      "https://github.com/MarcusYuan/HiveLaunch"
+      "https://github.com/MarcusYuan/HiveLaunch-Templates"
     ]
   },
   "variables": [],
